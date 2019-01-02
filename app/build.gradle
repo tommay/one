@@ -1,5 +1,14 @@
 apply plugin: 'com.android.application'
 
+// The keystore creds for signing the release apk are kept in
+// keystore.properties which is not in version control.  Load
+// the creds into keystoreProperties.  See
+// https://developer.android.com/studio/publish/app-signing#secure-key
+
+def keystoreProperties = new Properties()
+keystoreProperties.load(
+  new FileInputStream(rootProject.file("keystore.properties")))
+
 android {
     compileSdkVersion 27
     defaultConfig {
@@ -10,8 +19,20 @@ android {
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+
+    signingConfigs {
+        release {
+            // Use the values loaded from secure file "keystore.properties".
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
